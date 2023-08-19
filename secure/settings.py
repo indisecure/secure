@@ -119,7 +119,7 @@ USE_TZ = True
 STATIC_URL = 'static/'
 MEDIA_URL = 'media/'
 STATICFILES_DIRS = os.path.join(BASE_DIR, 'my_static'),
-STATIC_ROOT = os.path.join(BASE_DIR, 'django_static', 'my_static')
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles_build', 'my_static')
 
 
 # Default primary key field type
