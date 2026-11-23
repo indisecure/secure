@@ -5,29 +5,32 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
-import org.springframework.web.client.RestTemplate;
+import org.springframework.web.client.RestClient;
 
 @Component
 public class SelfPingService {
 
-    private static final Logger logger = LoggerFactory.getLogger(SelfPingService.class);
+	private static final Logger logger = LoggerFactory.getLogger(SelfPingService.class);
 
-    @SuppressWarnings("removal")
-	private final RestTemplate restTemplate = new RestTemplate();
+	private final RestClient restClient;
+	private final String selfPingUrl;
 
-    @Value("${self-ping.url}")
-    private String selfPingUrl;
+	public SelfPingService(RestClient.Builder restClientBuilder, @Value("${self-ping.url}") String selfPingUrl) {
+		this.restClient = restClientBuilder.build();
+		this.selfPingUrl = selfPingUrl;
+	}
 
-    // This method will run every 14 minutes.
-    // 14 * 60 * 1000 = 840000 milliseconds
-    @Scheduled(fixedRate = 840000)
-    public void pingSelf() {
-        try {
-            logger.info("Pinging self at URL: {}", selfPingUrl);
-            restTemplate.getForEntity(selfPingUrl, String.class);
-            logger.info("Ping successful.");
-        } catch (Exception e) {
-            logger.error("Ping failed: {}", e.getMessage());
-        }
-    }
+	@Scheduled(fixedRate = 840_000) // every 14 minutes
+	public void pingSelf() {
+		try {
+			logger.info("Pinging self at URL: {}", selfPingUrl);
+
+			restClient.get().uri(selfPingUrl).retrieve().toBodilessEntity(); 
+																				
+
+			logger.info("Ping successful.");
+		} catch (Exception e) {
+			logger.error("Ping failed", e);
+		}
+	}
 }
