@@ -1,6 +1,6 @@
 package secure;
 
-import java.util.List;
+
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -9,19 +9,49 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+
+import jakarta.servlet.http.HttpSession;
 
 @Controller
 public class StudentController {
 	@Autowired
 	private StudentService studentService;
 
+	@GetMapping("/login")
+    public String loginPage() {
+        return "login";
+    }
+	
 
-	@GetMapping("/students")
-	public String listStudents(Model model) {
-		List<Student> students = studentService.findAll();
-		model.addAttribute("data", students);
-		return "students";
-	}
+    @PostMapping("/login")
+    public String login(@RequestParam String username,
+                        @RequestParam String password,
+                        HttpSession session,
+                        Model model) {
+        if ("indi".equals(username) && "1234".equals(password)) {
+            session.setAttribute("user", username);
+            return "redirect:/students";
+        }
+        model.addAttribute("error", "Invalid login");
+        return "login";
+    }
+    @GetMapping("/logout")
+    public String logout(HttpSession session) {
+        session.invalidate();
+        return "redirect:/";
+    }
+
+    @GetMapping("/students")
+    public String listStudents(HttpSession session, Model model) {
+        if (session.getAttribute("user") == null) {
+            return "redirect:/login";
+        }
+        model.addAttribute("data", studentService.findAll());
+        return "students";
+    }
+
+   
 
 	@GetMapping("/students/new")
 	public String showNewStudentForm(Model model) {
@@ -47,5 +77,6 @@ public class StudentController {
 		studentService.deleteById(id);
 		return "redirect:/students";
 	}
+	
 
 }
